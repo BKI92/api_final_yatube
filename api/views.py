@@ -1,12 +1,8 @@
-import django_filters
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
 # Create your views here.
-from rest_framework import viewsets, status, generics, filters
-from rest_framework.permissions import IsAuthenticated, \
-    IsAuthenticatedOrReadOnly
-from rest_framework.response import Response
+from rest_framework import viewsets, generics, filters
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from api.serializers import PostSerializer, CommentSerializer, \
     FollowSerializer, GroupSerializer
@@ -50,6 +46,9 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class FollowViewSet(generics.ListCreateAPIView):
+    """
+     A viewset for getting and creating follow instances.
+     """
     serializer_class = FollowSerializer
     queryset = Follow.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -60,23 +59,10 @@ class FollowViewSet(generics.ListCreateAPIView):
             username=self.request.data.get('following'))
         serializer.save(user=self.request.user, following=following)
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        following_username = request.data.get('following')
-        if request.user.username != following_username:
-            if User.objects.filter(username=following_username):
-                target_user = User.objects.get(username=following_username)
-                if not Follow.objects.filter(user=request.user,
-                                             following=target_user):
-                    self.perform_create(serializer)
-                    headers = self.get_success_headers(serializer.data)
-                    return Response(serializer.data,
-                                    status=status.HTTP_201_CREATED,
-                                    headers=headers)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
 
 class GroupViewSet(generics.ListCreateAPIView):
+    """
+      A viewset for getting and creating group instances.
+      """
     serializer_class = GroupSerializer
     queryset = Group.objects.all()
